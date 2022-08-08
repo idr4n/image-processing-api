@@ -18,7 +18,7 @@
     - [X] access the image file from the specific location `./images/full/<image_name>.jpg`
     - [X] display images in the browser using `res.sendFile(<image_path>)`
 - [X] Display the image using the width and height specified in the query. Check Sharp (the module) to do this.
-- [ ] Save the new image in `./images/thumb`
-- [ ] Serve the image from cache if it exists locally already
+- [X] Save the new image in `./images/thumb` if it doesn't exist.
+- [X] Serve the image from cache if it exists locally already
 - [ ] Write some tests
 - [ ] Integrate eslint and prettier
