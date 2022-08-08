@@ -33,9 +33,9 @@ const getResizeOpts = (
 };
 
 /**
-* Sends the appropriate response to the client by displaying an image or
-* notifying if something is wrong.
-*/
+ * Sends the appropriate response to the client by displaying an image or
+ * notifying if something is wrong.
+ */
 async function displayImage(
   imagePath: string,
   query: ImageQuery,
@@ -47,6 +47,7 @@ async function displayImage(
       const newImage = await sharp(imagePath)
         .resize(getResizeOpts(query))
         .toBuffer({ resolveWithObject: true });
+
       res.contentType('image/jpeg');
       res.send(newImage.data);
     } catch (error) {
@@ -54,11 +55,10 @@ async function displayImage(
       res.send('Something went wrong...');
     }
     return;
-  } else {
-    console.log('Image file does not exists');
-    res.status(404).send('Sorry, we cannot find that!');
-    return;
   }
+
+  console.log('Image file does not exists');
+  res.status(404).send('Sorry, we cannot find that!');
 }
 
 images.get('/', async (req, res) => {
