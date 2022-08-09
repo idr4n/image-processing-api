@@ -32,8 +32,8 @@ async function getThumbImg(imagePath: string) {
     try {
       const metaLocalImg = await sharp(outputFile).metadata();
       const { width, height } = metaLocalImg;
+      console.log('===========================================')
       console.log('file exists in thumb');
-      console.log(width, height);
 
       return { path: outputFile, exists: true, width, height };
     } catch (error) {
@@ -106,12 +106,19 @@ async function displayImage(
       return;
     }
 
-    // check if image with same dimensions already exists in thumb folder
-    // if so, serve that image
+    // check if image with same dimensions, both width and height, already
+    // exists in the thumb folder. If so, serve that image. Both width and
+    // height have to be provided in the query to serve an image from cache
     const targetImg = await getThumbImg(imagePath);
 
-    if (targetImg.exists && sameDims(targetImg, query)) {
-      console.log('serving cached image from thumb folder...');
+    // if (targetImg.exists && sameDims(targetImg, query)) {
+    if (
+      targetImg.exists &&
+      targetImg.width === query.width &&
+      targetImg.height === query.height
+    ) {
+      console.log('* serving cached image from thumb folder...');
+      console.log('===========================================')
       res.sendFile(targetImg.path);
       return;
     }
@@ -121,14 +128,15 @@ async function displayImage(
       const newImage = originalImageObj.resize(getTargetDims(query));
       const newImageBuffer = await newImage.toBuffer();
 
-      console.log('serving resized image...');
+      console.log('* serving a resized image...');
 
       res.contentType('image/jpeg');
       res.send(newImageBuffer);
 
       // save the new image
       try {
-        console.log('saving the new image...');
+        console.log('* saving the new image...');
+        console.log('===========================================')
         await newImage.toFile(targetImg.path);
       } catch (error) {
         console.log('Error saving the image...');
@@ -157,7 +165,7 @@ images.get('/', async (req, res) => {
   const imagesDir = path.join(__dirname, '../../../', 'images/');
   const image = `${imagesDir + 'full/' + query.filename}.jpg`;
 
-  // check if there is no query being passed and display message if so
+  // check if there is no query being passed. If so, display message.
   if (Object.keys(req.query).length === 0) {
     res.send(
       'specify your image using /api/images?filename=name&width=number&height=number'
@@ -165,9 +173,7 @@ images.get('/', async (req, res) => {
     return;
   }
 
-  // check if original images has same width and height as the query
-
-  // display new image if original exists with resized options
+  // display image 
   await displayImage(image, query, res);
 });
 
