@@ -6,6 +6,7 @@ import sharp from 'sharp';
 
 const images = express.Router();
 
+// sets sharp's cache to 0
 sharp.cache(false);
 
 interface ImageQuery {
@@ -14,6 +15,26 @@ interface ImageQuery {
   height?: number;
 }
 
+/**
+ * Pretty console.log a comment
+ */
+function printComment(
+  comment: string,
+  separator: { up?: boolean; down?: boolean } = { up: true, down: true }
+) {
+  const sep = '===================================================';
+  separator.up && console.log(sep);
+  console.log(comment);
+  separator.down && console.log(sep);
+}
+
+/**
+ * Checks if an image already exists in the thumb folder
+
+ * Returs an object with the output file path, whether the image exists or not,
+ * and a boolean indicating if an image exists or not.
+ * If an image exists, the object also contains width and height properties
+ */
 async function getThumbImg(imagePath: string) {
   // check if thumb directory exists, otherwise create
   const outputDir = path.join(path.dirname(imagePath), '../', 'thumb');
@@ -32,8 +53,7 @@ async function getThumbImg(imagePath: string) {
     try {
       const metaLocalImg = await sharp(outputFile).metadata();
       const { width, height } = metaLocalImg;
-      console.log('===================================================');
-      console.log(
+      printComment(
         `file exists in thumb with width ${width} and height ${height}`
       );
 
@@ -50,7 +70,12 @@ async function getThumbImg(imagePath: string) {
 }
 
 /**
- * Returns the appropriate resize options based on the url query params
+ * Calculates the appropriate resize options based on the url query params and
+ * the size of the original image to get the auto-scale factor. If only one
+ * dimension is provided in the query, the other dimension is calculated from
+ * the original image aspect ratio (auto-scale factor)
+ *
+ * Returns an object with width and height properties
  */
 function getQuerytDims(
   originalData: { width?: number; height?: number },
@@ -60,6 +85,7 @@ function getQuerytDims(
 
   let orginalRatio = 1;
   if (originalData.height) {
+    // orginalRatio = (originalData.width as number) / originalData.height;
     orginalRatio = (originalData.width as number) / originalData.height;
   }
 
@@ -78,6 +104,10 @@ function getQuerytDims(
   return { width: originalData.width, height: originalData.height };
 }
 
+/**
+ * Checks if local image has the same dimensions as the query dimension.
+ * Returns true or false
+ */
 function sameDims(
   localDims: { width?: number; height?: number },
   queryDims: { width?: number; height?: number }
@@ -93,8 +123,9 @@ function sameDims(
 }
 
 /**
- * Sends the appropriate response to the client by displaying an image or
- * notifying if something is wrong.
+ * Sends the appropriate response to the client by displaying an image, new or
+ * from cache, saving the image if necessary, and notifying if something is
+ * wrong.
  */
 async function displayImage(
   imagePath: string,
@@ -109,7 +140,7 @@ async function displayImage(
     // check if original image has same width and/or height as the query
     // if yes, serve without resizing and saving a new one, and we are done!
     if (sameDims(originalImageMetadata, queryDims)) {
-      console.log('serving orginal image...');
+      printComment('serving orginal image...');
       res.sendFile(imagePath);
       return;
     }
@@ -121,8 +152,7 @@ async function displayImage(
 
     // if (targetImg.exists && sameDims(targetImg, query)) {
     if (targetImg.exists && sameDims(targetImg, queryDims)) {
-      console.log('* serving cached image from thumb folder...');
-      console.log('===================================================');
+      printComment('* serving cached image from thumb folder...');
       res.sendFile(targetImg.path);
       return;
     }
@@ -132,20 +162,13 @@ async function displayImage(
       const newImage = originalImageObj.resize(queryDims);
       const newImageBuffer = await newImage.toBuffer();
 
-      console.log('* serving a resized image...');
+      printComment('* serving a new image...', { down: false, up: true });
 
       res.contentType('image/jpeg');
       res.send(newImageBuffer);
 
-      // save the new image
-      try {
-        console.log('* saving the new image...');
-        console.log('===================================================');
-        await newImage.toFile(targetImg.path);
-      } catch (error) {
-        console.log('Error saving the image...');
-        console.log(error);
-      }
+      printComment('* saving the new image...', { up: false, down: true });
+      await newImage.toFile(targetImg.path);
     } catch (error) {
       console.log(error);
       res.send('Something went wrong...');
