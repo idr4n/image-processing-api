@@ -32,8 +32,10 @@ async function getThumbImg(imagePath: string) {
     try {
       const metaLocalImg = await sharp(outputFile).metadata();
       const { width, height } = metaLocalImg;
-      console.log('===========================================')
-      console.log('file exists in thumb');
+      console.log('===================================================');
+      console.log(
+        `file exists in thumb with width ${width} and height ${height}`
+      );
 
       return { path: outputFile, exists: true, width, height };
     } catch (error) {
@@ -50,20 +52,30 @@ async function getThumbImg(imagePath: string) {
 /**
  * Returns the appropriate resize options based on the url query params
  */
-function getTargetDims(data: ImageQuery): { width?: number; height?: number } {
-  let { width, height } = data;
+function getQuerytDims(
+  originalData: { width?: number; height?: number },
+  queryData: ImageQuery
+): { width?: number; height?: number } {
+  let { width, height } = queryData;
+
+  let orginalRatio = 1;
+  if (originalData.height) {
+    orginalRatio = (originalData.width as number) / originalData.height;
+  }
 
   if (width && height) {
     return { width, height };
   }
   if (width && !height) {
-    return { width };
+    const scaledHeight = Math.round(width / orginalRatio);
+    return { width, height: scaledHeight };
   }
   if (!width && height) {
-    return { height };
+    const scaledWidth = Math.round(height * orginalRatio);
+    return { width: scaledWidth, height };
   }
 
-  return {};
+  return { width: originalData.width, height: originalData.height };
 }
 
 function sameDims(
@@ -71,10 +83,8 @@ function sameDims(
   queryDims: { width?: number; height?: number }
 ): boolean {
   if (
-    (localDims.width === queryDims.width &&
-      (!queryDims.height || localDims.height === queryDims.height)) ||
-    (localDims.height === queryDims.height &&
-      (!queryDims.width || localDims.width === queryDims.width))
+    localDims.width === queryDims.width &&
+    localDims.height === queryDims.height
   ) {
     return true;
   }
@@ -94,13 +104,11 @@ async function displayImage(
   if (existsSync(imagePath)) {
     const originalImageObj = sharp(imagePath);
     const originalImageMetadata = await originalImageObj.metadata();
+    const queryDims = getQuerytDims(originalImageMetadata, query);
 
     // check if original image has same width and/or height as the query
     // if yes, serve without resizing and saving a new one, and we are done!
-    if (
-      Object.keys(getTargetDims(query)).length === 0 ||
-      sameDims(originalImageMetadata, query)
-    ) {
+    if (sameDims(originalImageMetadata, queryDims)) {
       console.log('serving orginal image...');
       res.sendFile(imagePath);
       return;
@@ -112,20 +120,16 @@ async function displayImage(
     const targetImg = await getThumbImg(imagePath);
 
     // if (targetImg.exists && sameDims(targetImg, query)) {
-    if (
-      targetImg.exists &&
-      targetImg.width === query.width &&
-      targetImg.height === query.height
-    ) {
+    if (targetImg.exists && sameDims(targetImg, queryDims)) {
       console.log('* serving cached image from thumb folder...');
-      console.log('===========================================')
+      console.log('===================================================');
       res.sendFile(targetImg.path);
       return;
     }
 
     // otherwise, serve and save a new resized image
     try {
-      const newImage = originalImageObj.resize(getTargetDims(query));
+      const newImage = originalImageObj.resize(queryDims);
       const newImageBuffer = await newImage.toBuffer();
 
       console.log('* serving a resized image...');
@@ -136,7 +140,7 @@ async function displayImage(
       // save the new image
       try {
         console.log('* saving the new image...');
-        console.log('===========================================')
+        console.log('===================================================');
         await newImage.toFile(targetImg.path);
       } catch (error) {
         console.log('Error saving the image...');
@@ -173,7 +177,7 @@ images.get('/', async (req, res) => {
     return;
   }
 
-  // display image 
+  // display image
   await displayImage(image, query, res);
 });
 
