@@ -3,7 +3,7 @@ import { existsSync } from 'fs';
 import { mkdir } from 'fs/promises';
 import path from 'path';
 import sharp from 'sharp';
-import { ImageQuery } from './types';
+import { ImageDimensions, ImageQuery } from './types';
 
 /**
  * Pretty console.log a comment
@@ -27,9 +27,9 @@ export function printComment(
  * Returns an object with width and height properties
  */
 export function getQuerytDims(
-  originalData: { width?: number; height?: number },
+  originalData: ImageDimensions,
   queryData: ImageQuery
-): { width?: number; height?: number } {
+): ImageDimensions {
   let { width, height } = queryData;
 
   let orginalRatio = 1;
@@ -58,8 +58,8 @@ export function getQuerytDims(
  * Returns true or false
  */
 export function sameDims(
-  localDims: { width?: number; height?: number },
-  queryDims: { width?: number; height?: number }
+  localDims: ImageDimensions,
+  queryDims: ImageDimensions
 ): boolean {
   if (
     localDims.width === queryDims.width &&

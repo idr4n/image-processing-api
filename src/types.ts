@@ -6,3 +6,12 @@ export interface ImageQuery {
   width?: number;
   height?: number;
 }
+
+/**
+* Image Dimensions interface
+*/
+export interface ImageDimensions {
+  width?: number;
+  height?: number;
+}
+
