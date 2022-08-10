@@ -30,7 +30,7 @@ export function getQuerytDims(
   originalData: ImageDimensions,
   queryData: ImageQuery
 ): ImageDimensions {
-  let { width, height } = queryData;
+  const { width, height } = queryData;
 
   let orginalRatio = 1;
   if (originalData.height) {

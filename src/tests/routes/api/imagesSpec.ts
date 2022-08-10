@@ -102,7 +102,7 @@ describe('Test endpoint responses', () => {
             await rm(imageThumbPath);
           }
 
-          let response = await request.get(`/api/images?${query}`);
+          const response = await request.get(`/api/images?${query}`);
           expect(response.headers['image-type']).toEqual('New');
         });
       });
@@ -136,7 +136,7 @@ describe('Test endpoint responses', () => {
         const query = new URLSearchParams(queryParams).toString();
 
         it('gets /api/images with filename, width and height', async () => {
-          let response = await request.get(`/api/images?${query}`);
+          const response = await request.get(`/api/images?${query}`);
           expect(response.headers['image-type']).toEqual('Cached');
         });
       });
