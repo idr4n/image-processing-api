@@ -12,10 +12,12 @@ export function printComment(
   comment: string,
   separator: { up?: boolean; down?: boolean } = { up: true, down: true }
 ) {
-  const sep = '===================================================';
-  separator.up && console.log(sep);
-  console.log(comment);
-  separator.down && console.log(sep);
+  if (process.env.NODE_ENV === 'development') {
+    const sep = '===================================================';
+    separator.up && console.log(sep);
+    console.log(comment);
+    separator.down && console.log(sep);
+  }
 }
 
 /**
@@ -192,6 +194,6 @@ export async function displayImage(
     return;
   }
 
-  console.log('Image file does not exists');
+  printComment('Image file does not exists');
   res.status(404).send('Sorry, we cannot find that!');
 }

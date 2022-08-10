@@ -98,7 +98,6 @@ describe('Test endpoint responses', () => {
 
         it('gets /api/images with filename, width and height', async () => {
           if (existsSync(imageThumbPath)) {
-            console.log('* deleting thumb image');
             await rm(imageThumbPath);
           }
 

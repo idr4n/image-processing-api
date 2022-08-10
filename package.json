@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon src/index.ts",
+    "dev": "NODE_ENV=development nodemon src/index.ts",
+    "prod": "NODE_ENV=production node dist/index.js",
     "build": "npx tsc",
     "test": "npm run build && jasmine",
     "lint": "npx eslint src/*"
