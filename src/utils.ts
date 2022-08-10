@@ -119,9 +119,9 @@ function setCustomHeaders(
   imageHeight: number | undefined
 ) {
   res.set({
-    'Image-type': imageType,
-    'Image-width': imageWidth,
-    'Image-height': imageHeight,
+    'image-type': imageType,
+    'image-width': imageWidth,
+    'image-height': imageHeight,
   });
 }
 
