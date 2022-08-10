@@ -21,4 +21,4 @@
 - [X] Save the new image in `./images/thumb` if it doesn't exist.
 - [X] Serve the image from cache if it exists locally already
 - [X] Write some tests
-- [ ] Integrate eslint and prettier
+- [X] Integrate eslint and prettier
