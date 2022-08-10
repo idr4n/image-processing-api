@@ -2,11 +2,13 @@
 
 ## Scripts needed to test/start/build the application
 
+Clone this repo and install the app with `npm install`. After that, the following scripts are available:
+
 * Star the application in `development` mode: `npm run dev`. This will print additional descriptive comments to the console.
 * Build the application for production: `npm run build`.
 * Star the application in `production` mode: After the application has been built, run `npm run prod`. No comments will be printed to the console in production mode.
-* Run Jasmine tests: `npm run test`. This will build and run different tests, including endpoint tests.
-* Check for error using `eslint`: Run `npm run lint`.
+* Run Jasmine tests: `npm run test`. This will build the application and run different tests, including endpoint tests.
+* Check for errors using `eslint`: Run `npm run lint`.
 
 ## Application Description
 
