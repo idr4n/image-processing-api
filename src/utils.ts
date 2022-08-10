@@ -3,7 +3,7 @@ import { existsSync } from 'fs';
 import { mkdir } from 'fs/promises';
 import path from 'path';
 import sharp from 'sharp';
-import { ImageDimensions, ImageQuery } from './types';
+import { ImageDimensions, ImageQuery, ImageType } from './types';
 
 /**
  * Pretty console.log a comment
@@ -112,6 +112,19 @@ async function getThumbImg(imagePath: string) {
   return { path: outputFile, exists: false };
 }
 
+function setCustomHeaders(
+  res: Response,
+  imageType: ImageType,
+  imageWidth: number | undefined,
+  imageHeight: number | undefined
+) {
+  res.set({
+    'Image-type': imageType,
+    'Image-width': imageWidth,
+    'Image-height': imageHeight,
+  });
+}
+
 /**
  * Sends the appropriate response to the client by displaying an image, new or
  * from cache, saving the image if necessary, and notifying if something is
@@ -131,6 +144,12 @@ export async function displayImage(
     // if yes, serve without resizing and saving a new one, and we are done!
     if (sameDims(originalImageMetadata, queryDims)) {
       printComment('serving orginal image...');
+      setCustomHeaders(
+        res,
+        ImageType.Original,
+        originalImageMetadata.width,
+        originalImageMetadata.height
+      );
       res.sendFile(imagePath);
       return;
     }
@@ -143,6 +162,12 @@ export async function displayImage(
     // if (targetImg.exists && sameDims(targetImg, query)) {
     if (targetImg.exists && sameDims(targetImg, queryDims)) {
       printComment('* serving cached image from thumb folder...');
+      setCustomHeaders(
+        res,
+        ImageType.Cached,
+        targetImg.width,
+        targetImg.height
+      );
       res.sendFile(targetImg.path);
       return;
     }
@@ -155,6 +180,7 @@ export async function displayImage(
       printComment('* serving a new image...', { down: false, up: true });
 
       res.contentType('image/jpeg');
+      setCustomHeaders(res, ImageType.New, queryDims.width, queryDims.height);
       res.send(newImageBuffer);
 
       printComment('* saving the new image...', { up: false, down: true });
