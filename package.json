@@ -6,7 +6,8 @@
   "scripts": {
     "start": "nodemon src/index.ts",
     "build": "npx tsc",
-    "test": "npm run build && jasmine"
+    "test": "npm run build && jasmine",
+    "lint": "npx eslint src/*"
   },
   "keywords": [],
   "author": "",
