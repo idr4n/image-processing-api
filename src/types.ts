@@ -8,10 +8,18 @@ export interface ImageQuery {
 }
 
 /**
-* Image Dimensions interface
-*/
+ * Image Dimensions interface
+ */
 export interface ImageDimensions {
   width?: number;
   height?: number;
 }
 
+/**
+ * Enum for Image type
+ */
+export enum ImageType {
+  Original = 'Original',
+  Cached = 'Cached',
+  New = 'New',
+}
