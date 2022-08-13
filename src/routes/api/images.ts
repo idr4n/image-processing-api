@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import path from 'path';
 import sharp from 'sharp';
 import { ImageQuery } from '../../types';
@@ -9,7 +9,7 @@ const images = express.Router();
 // sets sharp's cache to 0
 sharp.cache(false);
 
-images.get('/', async (req, res) => {
+images.get('/', async (req: Request, res: Response) => {
   // get the query parameters
   const query: ImageQuery = {
     filename: req.query.filename as string,
