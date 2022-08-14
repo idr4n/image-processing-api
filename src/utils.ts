@@ -34,8 +34,15 @@ export function printComment(
 export function getQuerytDims(
   originalData: ImageDimensions,
   queryData: ImageQuery
-): ImageDimensions {
+): ImageDimensions | Error {
   const { width, height } = queryData;
+
+  // const dimensionsCheck = checkDimensions(width as number, height as number);
+  const dimensionsCheck = checkDimensions(width, height);
+
+  if (!dimensionsCheck.valid) {
+    return dimensionsCheck.error as Error;
+  }
 
   let orginalRatio = 1;
   if (originalData.height) {

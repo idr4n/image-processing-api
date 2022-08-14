@@ -13,8 +13,10 @@ images.get('/', async (req: Request, res: Response) => {
   // get the query parameters
   const query: ImageQuery = {
     filename: req.query.filename as string,
-    width: parseFloat(req.query.width as string),
-    height: parseFloat(req.query.height as string),
+    width: req.query.width ? parseFloat(req.query.width as string) : undefined,
+    height: req.query.height
+      ? parseFloat(req.query.height as string)
+      : undefined,
   };
 
   // construct the image file path
