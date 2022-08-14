@@ -130,6 +130,44 @@ function setCustomHeaders(
   });
 }
 
+function isPositiveInt(val: number | undefined): boolean {
+  return Number.isInteger(val) && (val as number) > 0;
+}
+
+// TODO: add docstrings
+export function checkDimensions(
+  width: number | undefined,
+  height: number | undefined
+): { valid: boolean; error: Error | null } {
+  if (width === undefined && height === undefined) {
+    return { valid: true, error: null };
+  }
+  if (width === undefined && !isPositiveInt(height)) {
+    return {
+      valid: false,
+      error: new Error('Invalid height. Please enter a positive integer.'),
+    };
+  }
+  if (height === undefined && !isPositiveInt(width)) {
+    return {
+      valid: false,
+      error: new Error('Invalid width. Please enter a positive integer.'),
+    };
+  }
+  if (
+    width !== undefined &&
+    height !== undefined &&
+    (!isPositiveInt(height) || !isPositiveInt(width))
+  ) {
+    return {
+      valid: false,
+      error: new Error('Invalid dimensions. Please enter positive integers.'),
+    };
+  }
+
+  return { valid: true, error: null };
+}
+
 // TODO: add docstrings
 export async function resizeImage(
   image: Sharp,
@@ -142,20 +180,13 @@ export async function resizeImage(
     }
   | Error
 > {
-  // TODO: extract logic to a function named validDimensions
-  if (
-    !Number.isInteger(dimensions.width) ||
-    (dimensions.width as number) <= 0 ||
-    !Number.isFinite(dimensions.width)
-  ) {
-    return new Error('Invalid width. Please enter a positive integer.');
-  }
-  if (
-    !Number.isInteger(dimensions.height) ||
-    (dimensions.height as number) <= 0 ||
-    !Number.isFinite(dimensions.height)
-  ) {
-    return new Error('Invalid height. Please enter a positive integer.');
+  const dimensionsCheck = checkDimensions(
+    dimensions.width as number,
+    dimensions.height as number
+  );
+
+  if (!dimensionsCheck.valid) {
+    return dimensionsCheck.error as Error;
   }
 
   try {
@@ -186,6 +217,12 @@ export async function displayImage(
     const originalImageObj = sharp(imagePath);
     const originalImageMetadata = await originalImageObj.metadata();
     const queryDims = getQuerytDims(originalImageMetadata, query);
+
+    // if query dimensions are wrong, send an error message to the client
+    if (queryDims instanceof Error) {
+      res.status(400).send(queryDims.message);
+      return;
+    }
 
     // check if original image has same width and/or height as the query
     // if yes, serve without resizing and saving a new one, and we are done!
@@ -249,5 +286,7 @@ export async function displayImage(
   }
 
   printComment('Image file does not exists');
-  res.status(400).send('Sorry, we cannot find that. Please enter a valid image name.');
+  res
+    .status(400)
+    .send('Sorry, we cannot find that. Please enter a valid image name.');
 }

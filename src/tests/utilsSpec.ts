@@ -1,7 +1,12 @@
 import path from 'path';
 import sharp from 'sharp';
 import { ImageDimensions, ImageQuery } from '../types';
-import { getQuerytDims, resizeImage, sameDims } from '../utils';
+import {
+  checkDimensions,
+  getQuerytDims,
+  resizeImage,
+  sameDims,
+} from '../utils';
 
 describe('Tests for some of the utils functions', () => {
   let aspectRatio: number;
@@ -95,6 +100,134 @@ describe('Tests for some of the utils functions', () => {
       queryData.height = Math.round(queryData.width / aspectRatio);
 
       expect(sameDims(originalData, queryData)).toEqual(true);
+    });
+  });
+
+  describe('check if dimensions width and height are valid', () => {
+    it('undefined width and height', () => {
+      const width = undefined;
+      const height = undefined;
+      expect(checkDimensions(width, height).valid).toBeTrue();
+      expect(checkDimensions(width, height).error).toBeNull();
+    });
+
+    it('valid width and no height', () => {
+      const width = 200;
+      const height = undefined;
+      expect(checkDimensions(width, height).valid).toBeTrue();
+      expect(checkDimensions(width, height).error).toBeNull();
+    });
+
+    it('valid height and no width', () => {
+      const width = undefined;
+      const height = 200;
+      expect(checkDimensions(width, height).valid).toBeTrue();
+      expect(checkDimensions(width, height).error).toBeNull();
+    });
+
+    it('valid width and height 0', () => {
+      const width = 200;
+      const height = 0;
+      expect(checkDimensions(width, height).valid).toBeFalse();
+      expect(checkDimensions(width, height).error).toBeInstanceOf(Error);
+    });
+
+    it('valid width and height less than 0', () => {
+      const width = 200;
+      const height = -200;
+      expect(checkDimensions(width, height).valid).toBeFalse();
+      expect(checkDimensions(width, height).error).toBeInstanceOf(Error);
+    });
+
+    it('valid width and height not an integer', () => {
+      const width = 200;
+      const height = 200.5;
+      expect(checkDimensions(width, height).valid).toBeFalse();
+      expect(checkDimensions(width, height).error).toBeInstanceOf(Error);
+    });
+
+    it('valid height and width 0', () => {
+      const width = 200;
+      const height = 0;
+      expect(checkDimensions(width, height).valid).toBeFalse();
+      expect(checkDimensions(width, height).error).toBeInstanceOf(Error);
+    });
+
+    it('valid height and width less than 0', () => {
+      const width = -200;
+      const height = 200;
+      expect(checkDimensions(width, height).valid).toBeFalse();
+      expect(checkDimensions(width, height).error).toBeInstanceOf(Error);
+    });
+
+    it('valid height and width not an integer', () => {
+      const width = 200.5;
+      const height = 200;
+      expect(checkDimensions(width, height).valid).toBeFalse();
+      expect(checkDimensions(width, height).error).toBeInstanceOf(Error);
+    });
+
+    it('height 0 and no width', () => {
+      const width = undefined;
+      const height = 0;
+      expect(checkDimensions(width, height).valid).toBeFalse();
+      expect(checkDimensions(width, height).error).toBeInstanceOf(Error);
+    });
+
+    it('height less than 0 and no width', () => {
+      const width = undefined;
+      const height = -200;
+      expect(checkDimensions(width, height).valid).toBeFalse();
+      expect(checkDimensions(width, height).error).toBeInstanceOf(Error);
+    });
+
+    it('height not an integer and no width', () => {
+      const width = undefined;
+      const height = 200.5;
+      expect(checkDimensions(width, height).valid).toBeFalse();
+      expect(checkDimensions(width, height).error).toBeInstanceOf(Error);
+    });
+
+    it('width 0 and no height', () => {
+      const width = 0;
+      const height = undefined;
+      expect(checkDimensions(width, height).valid).toBeFalse();
+      expect(checkDimensions(width, height).error).toBeInstanceOf(Error);
+    });
+
+    it('width less than 0 and no height', () => {
+      const width = -200;
+      const height = undefined;
+      expect(checkDimensions(width, height).valid).toBeFalse();
+      expect(checkDimensions(width, height).error).toBeInstanceOf(Error);
+    });
+
+    it('width not an integer and no height', () => {
+      const width = 200.5;
+      const height = undefined;
+      expect(checkDimensions(width, height).valid).toBeFalse();
+      expect(checkDimensions(width, height).error).toBeInstanceOf(Error);
+    });
+
+    it('0 width and height', () => {
+      const width = 0;
+      const height = 0;
+      expect(checkDimensions(width, height).valid).toBeFalse();
+      expect(checkDimensions(width, height).error).toBeInstanceOf(Error);
+    });
+
+    it('negative width and height', () => {
+      const width = -200;
+      const height = -200;
+      expect(checkDimensions(width, height).valid).toBeFalse();
+      expect(checkDimensions(width, height).error).toBeInstanceOf(Error);
+    });
+
+    it('valid width and height', () => {
+      const width = 200;
+      const height = 200;
+      expect(checkDimensions(width, height).valid).toBeTrue();
+      expect(checkDimensions(width, height).error).toBeNull();
     });
   });
 
