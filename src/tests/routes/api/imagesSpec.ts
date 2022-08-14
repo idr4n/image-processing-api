@@ -46,7 +46,7 @@ describe('Test endpoint responses', () => {
       const query = new URLSearchParams(queryParams).toString();
 
       const response = await request.get(`/api/images?${query}`);
-      expect(response.status).toBe(404);
+      expect(response.status).toBe(400);
     });
 
     it('gets /api/images with filename param missing', async () => {
@@ -55,7 +55,7 @@ describe('Test endpoint responses', () => {
       const query = new URLSearchParams(queryParams).toString();
 
       const response = await request.get(`/api/images?${query}`);
-      expect(response.status).toBe(404);
+      expect(response.status).toBe(400);
     });
 
     images.forEach((image) => {

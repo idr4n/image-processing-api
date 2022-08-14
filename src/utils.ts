@@ -2,7 +2,7 @@ import { Response } from 'express';
 import { existsSync } from 'fs';
 import { mkdir } from 'fs/promises';
 import path from 'path';
-import sharp from 'sharp';
+import sharp, { Sharp } from 'sharp';
 import { ImageDimensions, ImageQuery, ImageType } from './types';
 
 /**
@@ -10,13 +10,16 @@ import { ImageDimensions, ImageQuery, ImageType } from './types';
  */
 export function printComment(
   comment: string,
-  separator: { up?: boolean; down?: boolean } = { up: true, down: true }
+  options: { startSep?: boolean; endSep?: boolean } = {
+    startSep: true,
+    endSep: true,
+  }
 ) {
   if (process.env.NODE_ENV === 'development') {
     const sep = '===================================================';
-    separator.up && console.log(sep);
+    options.startSep && console.log(sep);
     console.log(comment);
-    separator.down && console.log(sep);
+    options.endSep && console.log(sep);
   }
 }
 
@@ -127,6 +130,48 @@ function setCustomHeaders(
   });
 }
 
+// TODO: add docstrings
+export async function resizeImage(
+  image: Sharp,
+  dimensions: ImageDimensions
+): Promise<
+  | {
+      data: Buffer | undefined;
+      width: number | undefined;
+      height: number | undefined;
+    }
+  | Error
+> {
+  // TODO: extract logic to a function named validDimensions
+  if (
+    !Number.isInteger(dimensions.width) ||
+    (dimensions.width as number) <= 0 ||
+    !Number.isFinite(dimensions.width)
+  ) {
+    return new Error('Invalid width. Please enter a positive integer.');
+  }
+  if (
+    !Number.isInteger(dimensions.height) ||
+    (dimensions.height as number) <= 0 ||
+    !Number.isFinite(dimensions.height)
+  ) {
+    return new Error('Invalid height. Please enter a positive integer.');
+  }
+
+  try {
+    const newImage = await image
+      .resize(dimensions)
+      .toBuffer({ resolveWithObject: true });
+    return {
+      data: newImage.data,
+      width: newImage.info.width,
+      height: newImage.info.height,
+    };
+  } catch (error) {
+    return new Error(`Something went wrong.\n${error}`);
+  }
+}
+
 /**
  * Sends the appropriate response to the client by displaying an image, new or
  * from cache, saving the image if necessary, and notifying if something is
@@ -175,25 +220,34 @@ export async function displayImage(
     }
 
     // otherwise, serve and save a new resized image
-    try {
-      const newImage = originalImageObj.resize(queryDims);
-      const newImageBuffer = await newImage.toBuffer();
+    const newImage = await resizeImage(originalImageObj, queryDims);
 
-      printComment('* serving a new image...', { down: false, up: true });
+    if (!(newImage instanceof Error) && newImage.data) {
+      printComment('* serving a new image...', {
+        endSep: false,
+        startSep: true,
+      });
 
       res.contentType('image/jpeg');
-      setCustomHeaders(res, ImageType.New, queryDims.width, queryDims.height);
-      res.send(newImageBuffer);
+      setCustomHeaders(res, ImageType.New, newImage.width, newImage.height);
+      res.send(newImage.data);
 
-      printComment('* saving the new image...', { up: false, down: true });
-      await newImage.toFile(targetImg.path);
-    } catch (error) {
-      console.log(error);
-      res.send('Something went wrong...');
+      printComment('* saving the new image...', {
+        startSep: false,
+        endSep: true,
+      });
+
+      await sharp(newImage.data).toFile(targetImg.path);
+      return;
+    } else if (newImage instanceof Error) {
+      res.status(400).send((newImage as Error).message);
+      return;
+    } else {
+      res.send('Something went wrong. No image to show.');
+      return;
     }
-    return;
   }
 
   printComment('Image file does not exists');
-  res.status(404).send('Sorry, we cannot find that!');
+  res.status(400).send('Sorry, we cannot find that. Please enter a valid image name.');
 }

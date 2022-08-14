@@ -1,5 +1,7 @@
+import path from 'path';
+import sharp from 'sharp';
 import { ImageDimensions, ImageQuery } from '../types';
-import { getQuerytDims, sameDims } from '../utils';
+import { getQuerytDims, resizeImage, sameDims } from '../utils';
 
 describe('Tests for some of the utils functions', () => {
   let aspectRatio: number;
@@ -93,6 +95,42 @@ describe('Tests for some of the utils functions', () => {
       queryData.height = Math.round(queryData.width / aspectRatio);
 
       expect(sameDims(originalData, queryData)).toEqual(true);
+    });
+  });
+
+  describe('resize image using different params', () => {
+    it('returns an object with a data, width and height', async () => {
+      const width = 300;
+      const height = 300;
+      const imagePath = path.join(__dirname, '../../images/full/fjord.jpg');
+      const newImage = await resizeImage(sharp(imagePath), { width, height });
+
+      if (!(newImage instanceof Error)) {
+        expect(newImage.width).toEqual(width);
+        expect(newImage.height).toEqual(height);
+        expect(newImage.data).toBeTruthy();
+      }
+    });
+
+    it('negative dimensions returns an Error', async () => {
+      const width = -300;
+      const height = -300;
+      const imagePath = path.join(__dirname, '../../images/full/fjord.jpg');
+      const newImage = await resizeImage(sharp(imagePath), { width, height });
+
+      expect(newImage).toBeInstanceOf(Error);
+    });
+
+    it('wrong image path returns an Error', async () => {
+      const width = 300;
+      const height = 300;
+      const imagePath = path.join(
+        __dirname,
+        '../../images/full/not_an_image.jpg'
+      );
+      const newImage = await resizeImage(sharp(imagePath), { width, height });
+
+      expect(newImage).toBeInstanceOf(Error);
     });
   });
 });
