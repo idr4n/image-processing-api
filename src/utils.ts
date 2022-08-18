@@ -90,7 +90,7 @@ export function sameDims(
 * and a boolean indicating if an image exists or not.
 * If an image exists, the object also contains width and height properties
 */
-async function getThumbImg(imagePath: string) {
+async function getThumbImg(imagePath: string, width: number, height: number) {
   // check if thumb directory exists, otherwise create
   const outputDir = path.join(path.dirname(imagePath), '../', 'thumb');
   if (!existsSync(outputDir)) {
@@ -100,24 +100,18 @@ async function getThumbImg(imagePath: string) {
   // contruct the file path where the resized image will be saved if it doesn't exist
   const outputFile = path.join(
     outputDir,
-    `${path.parse(imagePath).name}_thumb.jpg`
+    `${
+      path.parse(imagePath).name
+    }_${width.toString()}x${height.toString()}_thumb.jpg`
   );
 
   // returns path, width and height if image already exists
   if (existsSync(outputFile)) {
-    try {
-      const metaLocalImg = await sharp(outputFile).metadata();
-      const { width, height } = metaLocalImg;
-      printComment(
-        `file exists in thumb with width ${width} and height ${height}`
-      );
+    printComment(
+      `file exists in thumb with width ${width.toString()} and height ${height.toString()}`
+    );
 
-      return { path: outputFile, exists: true, width, height };
-    } catch (error) {
-      console.log(error);
-      // return {};
-      return { path: outputFile, exists: false };
-    }
+    return { path: outputFile, exists: true, width, height };
   }
 
   // returns the path where image will be saved for the first time
@@ -248,10 +242,14 @@ export async function displayImage(
     // check if image with same dimensions, both width and height, already
     // exists in the thumb folder. If so, serve that image. Both width and
     // height have to be provided in the query to serve an image from cache
-    const targetImg = await getThumbImg(imagePath);
+    const targetImg = await getThumbImg(
+      imagePath,
+      queryDims.width as number,
+      queryDims.height as number
+    );
 
     // if (targetImg.exists && sameDims(targetImg, query)) {
-    if (targetImg.exists && sameDims(targetImg, queryDims)) {
+    if (targetImg.exists) {
       printComment('* serving cached image from thumb folder...');
       setCustomHeaders(
         res,

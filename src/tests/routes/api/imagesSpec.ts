@@ -93,7 +93,7 @@ describe('Test endpoint responses', () => {
 
         const imageThumbPath = path.join(
           imagesThumbDir,
-          `${image.filename}_thumb.jpg`
+          `${image.filename}_${queryParams.width}x${queryParams.height}_thumb.jpg`
         );
 
         it('gets /api/images with filename, width and height', async () => {
