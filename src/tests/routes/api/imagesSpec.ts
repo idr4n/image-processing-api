@@ -1,5 +1,4 @@
-import { existsSync } from 'fs';
-import { rm } from 'fs/promises';
+import { rm, stat } from 'fs/promises';
 import path from 'path';
 import supertest from 'supertest';
 import app from '../../..';
@@ -97,9 +96,13 @@ describe('Test endpoint responses', () => {
         );
 
         it('gets /api/images with filename, width and height', async () => {
-          if (existsSync(imageThumbPath)) {
-            await rm(imageThumbPath);
-          }
+          try {
+            // await access(imageThumbPath, constants.R_OK | constants.W_OK);
+            const pathStats = await stat(imageThumbPath);
+            if (pathStats.isFile()) {
+              await rm(imageThumbPath);
+            }
+          } catch {}
 
           const response = await request.get(`/api/images?${query}`);
           expect(response.headers['image-type']).toEqual('New');

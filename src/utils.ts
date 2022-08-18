@@ -1,6 +1,6 @@
 import { Response } from 'express';
-import { existsSync } from 'fs';
-import { mkdir } from 'fs/promises';
+import { constants } from 'fs';
+import { access, mkdir } from 'fs/promises';
 import path from 'path';
 import sharp, { Sharp } from 'sharp';
 import { ImageDimensions, ImageQuery, ImageType } from './types';
@@ -93,7 +93,10 @@ export function sameDims(
 async function getThumbImg(imagePath: string, width: number, height: number) {
   // check if thumb directory exists, otherwise create
   const outputDir = path.join(path.dirname(imagePath), '../', 'thumb');
-  if (!existsSync(outputDir)) {
+
+  try {
+    await access(outputDir, constants.R_OK | constants.W_OK);
+  } catch {
     await mkdir(outputDir);
   }
 
@@ -105,17 +108,16 @@ async function getThumbImg(imagePath: string, width: number, height: number) {
     }_${width.toString()}x${height.toString()}_thumb.jpg`
   );
 
-  // returns path, width and height if image already exists
-  if (existsSync(outputFile)) {
+  // returns path, width and height if image already exists, otherwise just the path.
+  try {
+    await access(outputFile, constants.R_OK);
     printComment(
       `file exists in thumb with width ${width.toString()} and height ${height.toString()}`
     );
-
     return { path: outputFile, exists: true, width, height };
+  } catch {
+    return { path: outputFile, exists: false };
   }
-
-  // returns the path where image will be saved for the first time
-  return { path: outputFile, exists: false };
 }
 
 function setCustomHeaders(
@@ -214,84 +216,82 @@ export async function displayImage(
   query: ImageQuery,
   res: Response
 ) {
-  if (existsSync(imagePath)) {
-    const originalImageObj = sharp(imagePath);
-    const originalImageMetadata = await originalImageObj.metadata();
-    const queryDims = getQuerytDims(originalImageMetadata, query);
-
-    // if query dimensions are wrong, send an error message to the client
-    if (queryDims instanceof Error) {
-      res.status(400).send(queryDims.message);
-      return;
-    }
-
-    // check if original image has same width and/or height as the query
-    // if yes, serve without resizing and saving a new one, and we are done!
-    if (sameDims(originalImageMetadata, queryDims)) {
-      printComment('serving orginal image...');
-      setCustomHeaders(
-        res,
-        ImageType.Original,
-        originalImageMetadata.width,
-        originalImageMetadata.height
-      );
-      res.sendFile(imagePath);
-      return;
-    }
-
-    // check if image with same dimensions, both width and height, already
-    // exists in the thumb folder. If so, serve that image. Both width and
-    // height have to be provided in the query to serve an image from cache
-    const targetImg = await getThumbImg(
-      imagePath,
-      queryDims.width as number,
-      queryDims.height as number
-    );
-
-    // if (targetImg.exists && sameDims(targetImg, query)) {
-    if (targetImg.exists) {
-      printComment('* serving cached image from thumb folder...');
-      setCustomHeaders(
-        res,
-        ImageType.Cached,
-        targetImg.width,
-        targetImg.height
-      );
-      res.sendFile(targetImg.path);
-      return;
-    }
-
-    // otherwise, serve and save a new resized image
-    const newImage = await resizeImage(originalImageObj, queryDims);
-
-    if (!(newImage instanceof Error) && newImage.data) {
-      printComment('* serving a new image...', {
-        endSep: false,
-        startSep: true,
-      });
-
-      res.contentType('image/jpeg');
-      setCustomHeaders(res, ImageType.New, newImage.width, newImage.height);
-      res.send(newImage.data);
-
-      printComment('* saving the new image...', {
-        startSep: false,
-        endSep: true,
-      });
-
-      await sharp(newImage.data).toFile(targetImg.path);
-      return;
-    } else if (newImage instanceof Error) {
-      res.status(400).send((newImage as Error).message);
-      return;
-    } else {
-      res.send('Something went wrong. No image to show.');
-      return;
-    }
+  try {
+    await access(imagePath, constants.R_OK);
+  } catch {
+    printComment('Image file does not exists');
+    res
+      .status(400)
+      .send('Sorry, we cannot find that. Please enter a valid image name.');
+    return;
   }
 
-  printComment('Image file does not exists');
-  res
-    .status(400)
-    .send('Sorry, we cannot find that. Please enter a valid image name.');
+  const originalImageObj = sharp(imagePath);
+  const originalImageMetadata = await originalImageObj.metadata();
+  const queryDims = getQuerytDims(originalImageMetadata, query);
+
+  // if query dimensions are wrong, send an error message to the client
+  if (queryDims instanceof Error) {
+    res.status(400).send(queryDims.message);
+    return;
+  }
+
+  // check if original image has same width and/or height as the query
+  // if yes, serve without resizing and saving a new one, and we are done!
+  if (sameDims(originalImageMetadata, queryDims)) {
+    printComment('serving orginal image...');
+    setCustomHeaders(
+      res,
+      ImageType.Original,
+      originalImageMetadata.width,
+      originalImageMetadata.height
+    );
+    res.sendFile(imagePath);
+    return;
+  }
+
+  // check if image with same dimensions, both width and height, already
+  // exists in the thumb folder. If so, serve that image. Both width and
+  // height have to be provided in the query to serve an image from cache
+  const targetImg = await getThumbImg(
+    imagePath,
+    queryDims.width as number,
+    queryDims.height as number
+  );
+
+  // if (targetImg.exists && sameDims(targetImg, query)) {
+  if (targetImg.exists) {
+    printComment('* serving cached image from thumb folder...');
+    setCustomHeaders(res, ImageType.Cached, targetImg.width, targetImg.height);
+    res.sendFile(targetImg.path);
+    return;
+  }
+
+  // otherwise, serve and save a new resized image
+  const newImage = await resizeImage(originalImageObj, queryDims);
+
+  if (!(newImage instanceof Error) && newImage.data) {
+    printComment('* serving a new image...', {
+      endSep: false,
+      startSep: true,
+    });
+
+    res.contentType('image/jpeg');
+    setCustomHeaders(res, ImageType.New, newImage.width, newImage.height);
+    res.send(newImage.data);
+
+    printComment('* saving the new image...', {
+      startSep: false,
+      endSep: true,
+    });
+
+    await sharp(newImage.data).toFile(targetImg.path);
+    return;
+  } else if (newImage instanceof Error) {
+    res.status(400).send((newImage as Error).message);
+    return;
+  } else {
+    res.send('Something went wrong. No image to show.');
+    return;
+  }
 }
