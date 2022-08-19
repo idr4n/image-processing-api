@@ -9,6 +9,7 @@ Clone this repo and install the app with `npm install`. After that, the followin
 * Star the application in `production` mode: After the application has been built, run `npm run prod`. No comments will be printed to the console in production mode.
 * Run Jasmine tests: `npm run test`. This will build the application and run different tests, including endpoint tests.
 * Check for errors using `eslint`: Run `npm run lint`.
+* Check for formatting using `prettier`: Run `npm run prettier`
 
 ## Application Description
 
@@ -16,7 +17,7 @@ Clone this repo and install the app with `npm install`. After that, the followin
 * An original image (i.e., without resizing) with file name `apple.jpg` will be served by visiting the following endpoint:
     `localhost:3000/api/images?filename=apple`
 * The image will be resized if either width and height, or both, parameters are added in the url query, and they are different than the original image dimensions.
-* If a resized image is served, it will also be stored with under name `<name>_thumb.jpg` in the folder `./images/thumb`. This stored image will be served in future requests if the query has the same dimensions.
+* If a resized image is served, it will also be stored under the name `<name>_<width>x<height>_thumb.jpg` in the folder `./images/thumb`. This stored image will be served in future requests if the query has the same dimensions.
 
 **Examples**:
 
@@ -26,9 +27,9 @@ Clone this repo and install the app with `npm install`. After that, the followin
 * `localhost:3000/api/images?filename=apple&width=1920` will always serve the same image without resizing and storing a new image.
 * `localhost:3000/api/images?filename=apple&height=1280` will always serve the same image without resizing and storing a new image.
 * `localhost:3000/api/images?filename=apple&width=1920&height=1280` will always serve the same image without resizing and storing a new image.
-* `localhost:3000/api/images?filename=apple&width=300` will serve a new resized image with width 300 and auto-scaled height of 200. The auto-scale factor is based on the original image size. The new image will be stored in the `thumb` folder with name `apple_thumb.jpg`.
+* `localhost:3000/api/images?filename=apple&width=300` will serve a new resized image with width 300 and auto-scaled height of 200. The auto-scale factor is based on the original image size. The new image will be stored in the `thumb` folder with name `apple_300x200_thumb.jpg`.
 
-**(2)** Assume an image `apple.jpg` is stored in the `images/full` folder with width 1920 and height 1280, and `apple_thumb.jpg` is stored in the `images/thumb` folder with width 300 and height 200.
+**(2)** Assume an image `apple.jpg` is stored in the `images/full` folder with width 1920 and height 1280, and `apple_300x200_thumb.jpg` is stored in the `images/thumb` folder.
 
 * `localhost:3000/api/images?filename=apple&width=300` will serve the image stored in the `thumb` folder. This is because the stored image height correspond to the same aspect ratio of the original image.
 * `localhost:3000/api/images?filename=apple&width=300&height=300` will serve and store a new image in the `thumb` folder with width and height of 300.
@@ -36,7 +37,7 @@ Clone this repo and install the app with `npm install`. After that, the followin
 **(3)** Assume an image `apple.jpg` is stored in the `images/full` folder with width 1920 and height 1280, and `apple_thumb.jpg` is stored in the `images/thumb` folder with width 300 and height 300.
 
 * `localhost:3000/api/images?filename=apple&width=300&height=300` will serve the image stored in the `thumb` folder.
-* `localhost:3000/api/images?filename=apple&width=300` will serve a new resized image with width 300 and auto-scaled height of 200.
+* `localhost:3000/api/images?filename=apple&width=300` will serve a new resized image with width 300 and auto-scaled height of 200 if it does not exist already in the thumb folder.
 
 
 ## Instructions given for this project
