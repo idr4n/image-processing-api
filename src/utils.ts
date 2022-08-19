@@ -137,7 +137,15 @@ function isPositiveInt(val: number | undefined): boolean {
   return Number.isInteger(val) && (val as number) > 0;
 }
 
-// TODO: add docstrings
+/**
+ * check whether the image dimensions, width and height, are
+ * valid integers for applying image resizing
+ * @function checkDimensions
+ * @param {number | undefined} width  The width of the image
+ * @param {number | undefined} height The height of the image
+ * @return {Object}                   Indicates whehter dimensions are valid,
+ *                                    a not null error if they are not
+ */
 export function checkDimensions(
   width: number | undefined,
   height: number | undefined
@@ -171,7 +179,9 @@ export function checkDimensions(
   return { valid: true, error: null };
 }
 
-// TODO: add docstrings
+/**
+ * resizes the given sharp image
+ */
 export async function resizeImage(
   image: Sharp,
   dimensions: ImageDimensions
