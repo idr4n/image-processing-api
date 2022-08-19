@@ -102,7 +102,10 @@ describe('Test endpoint responses', () => {
             if (pathStats.isFile()) {
               await rm(imageThumbPath);
             }
-          } catch {}
+          } catch {
+            // continue regardless as an error indicates that the image does
+            // not exist and so it will be created
+          }
 
           const response = await request.get(`/api/images?${query}`);
           expect(response.headers['image-type']).toEqual('New');
