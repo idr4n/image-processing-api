@@ -146,7 +146,7 @@ describe('Tests for some of the utils functions', () => {
       expect(checkDimensions(width, height).error).toBeInstanceOf(Error);
     });
 
-    it('valid height and width 0', () => {
+    it('valid width and height 0', () => {
       const width = 200;
       const height = 0;
       expect(checkDimensions(width, height).valid).toBeFalse();
