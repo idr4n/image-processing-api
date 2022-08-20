@@ -14,7 +14,7 @@ export function printComment(
     startSep: true,
     endSep: true,
   }
-) {
+): void {
   if (process.env.NODE_ENV === 'development') {
     const sep = '===================================================';
     options.startSep && console.log(sep);
@@ -90,7 +90,24 @@ export function sameDims(
 * and a boolean indicating if an image exists or not.
 * If an image exists, the object also contains width and height properties
 */
-async function getThumbImg(imagePath: string, width: number, height: number) {
+async function getThumbImg(
+  imagePath: string,
+  width: number,
+  height: number
+): Promise<
+  | {
+      path: string;
+      exists: boolean;
+      width: number;
+      height: number;
+    }
+  | {
+      path: string;
+      exists: boolean;
+      width?: undefined;
+      height?: undefined;
+    }
+> {
   // check if thumb directory exists, otherwise create
   const outputDir = path.join(path.dirname(imagePath), '../', 'thumb');
 
@@ -125,7 +142,7 @@ function setCustomHeaders(
   imageType: ImageType,
   imageWidth: number | undefined,
   imageHeight: number | undefined
-) {
+): void {
   res.set({
     'image-type': imageType,
     'image-width': imageWidth,
@@ -225,7 +242,7 @@ export async function displayImage(
   imagePath: string,
   query: ImageQuery,
   res: Response
-) {
+): Promise<void> {
   try {
     await access(imagePath, constants.R_OK);
   } catch {

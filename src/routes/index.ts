@@ -3,13 +3,13 @@ import images from './api/images';
 
 const routes = express.Router();
 
-routes.get('/', (req: Request, res: Response) => {
+routes.get('/', (req: Request, res: Response): void => {
   res.send(
     'server working... specify the image with /api/images?filename=name&width=number&height=number'
   );
 });
 
-routes.get('/api', (req: Request, res: Response) => {
+routes.get('/api', (req: Request, res: Response): void => {
   res.send(
     'Api route... specify the image with /api/images?filename=name&width=number&height=number'
   );

@@ -9,7 +9,7 @@ const images = express.Router();
 // sets sharp's cache to 0
 sharp.cache(false);
 
-images.get('/', async (req: Request, res: Response) => {
+images.get('/', async (req: Request, res: Response): Promise<void> => {
   // get the query parameters
   const query: ImageQuery = {
     filename: req.query.filename as string,
